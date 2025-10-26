@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technical Jargon: Word Cloud</title>
+    <!-- SheetJS library for Excel file reading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- D3.js for word cloud generation -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- D3-cloud plugin for word cloud layout -->
+    <script src="https://cdn.jsdelivr.net/npm/d3-cloud@1.2.5/build/d3.layout.cloud.min.js"></script>
+    
+    <style>
+        /* Design System Variables - Easy to modify */
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --background-primary: #ffffff;
+            --background-secondary: #f9fafb;
+            --background-tertiary: #f3f4f6;
+            --border-color: #e5e7eb;
+            --border-hover: #d1d5db;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+            --spacing-2xl: 48px;
+            --border-radius-sm: 6px;
+            --border-radius-md: 8px;
+            --border-radius-lg: 12px;
+            --font-size-sm: 14px;
+            --font-size-base: 16px;
+            --font-size-lg: 18px;
+            --font-size-xl: 20px;
+            --font-size-2xl: 24px;
+            --font-size-3xl: 32px;
+        }
+
+        /* Base Styles */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            font-size: var(--font-size-base);
+        }
+
+        /* Main Layout Container */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            background: var(--background-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: var(--spacing-lg) var(--spacing-xl);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .page-title {
+            margin: 0;
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--text-primary);
+            text-align: center;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            display: flex;
+            flex: 1;
+            gap: var(--spacing-lg);
+            padding: var(--spacing-lg);
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Side Panel */
+        .side-panel {
+            width: 320px;
+            background: var(--background-primary);
+            border-radius: var(--border-radius-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-md);
+            padding: var(--spacing-lg);
+            height: fit-content;
+            position: sticky;
+            top: var(--spacing-lg);
+        }
+
+        .panel-section {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .panel-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0 0 var(--spacing-md) 0;
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        /* File Input Styling */
+        .file-input-container {
+            position: relative;
+        }
+
+        .file-input {
+            width: 100%;
+            padding: var(--spacing-md);
+            font-size: var(--font-size-base);
+            border: 2px dashed var(--primary-color);
+            border-radius: var(--border-radius-md);
+            background-color: var(--background-tertiary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-primary);
+        }
+
+        .file-input:hover {
+            background-color: var(--background-secondary);
+            border-color: var(--primary-hover);
+        }
+
+        .file-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Search Field */
+        .search-field {
+            width: 100%;
+            padding: var(--spacing-md);
+            font-size: var(--font-size-base);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            background-color: var(--background-primary);
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .search-field:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .search-field::placeholder {
+            color: var(--text-secondary);
+        }
+
+        /* Category Control Buttons */
+        .category-controls {
+            display: flex;
+            gap: var(--spacing-xs);
+        }
+
+        .control-btn {
+            padding: var(--spacing-xs) var(--spacing-sm);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
+            background-color: var(--background-primary);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .control-btn:hover {
+            background-color: var(--background-tertiary);
+            border-color: var(--border-hover);
+        }
+
+        .control-btn:active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* Export Button */
+        .export-btn {
+            width: 100%;
+            padding: var(--spacing-md);
+            font-size: var(--font-size-base);
+            font-weight: 500;
+            border: 1px solid var(--primary-color);
+            border-radius: var(--border-radius-md);
+            background-color: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .export-btn:hover {
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+        }
+
+        .export-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* Help Section */
+        .help-content {
+            font-size: var(--font-size-sm);
+            line-height: 1.5;
+        }
+
+        .help-item {
+            margin-bottom: var(--spacing-sm);
+            padding: var(--spacing-sm);
+            background-color: var(--background-secondary);
+            border-radius: var(--border-radius-sm);
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .help-item:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Legend Styling */
+        .legend-items {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm) var(--spacing-md);
+            background-color: var(--background-secondary);
+            border-radius: var(--border-radius-sm);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            word-wrap: break-word;
+        }
+
+        .legend-item:hover {
+            background-color: var(--background-tertiary);
+            border-color: var(--border-hover);
+        }
+
+        .legend-item.disabled {
+            opacity: 0.5;
+            background-color: var(--background-tertiary);
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .legend-checkbox {
+            margin: 0;
+            cursor: pointer;
+            accent-color: var(--primary-color);
+        }
+
+        .legend-label {
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            color: var(--text-primary);
+            flex: 1;
+            word-wrap: break-word;
+            hyphens: auto;
+        }
+
+        /* Word Cloud Container */
+        .word-cloud-area {
+            flex: 1;
+            background: var(--background-primary);
+            border-radius: var(--border-radius-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-md);
+            padding: var(--spacing-lg);
+            min-height: 600px;
+            position: relative;
+        }
+
+        .word-cloud-container {
+            width: 100%;
+            height: 100%;
+            min-height: 500px;
+            position: relative;
+        }
+
+        /* Status Messages */
+        .loading, .error {
+            text-align: center;
+            font-size: var(--font-size-lg);
+            margin-top: 200px;
+            color: var(--text-secondary);
+        }
+
+        .error {
+            color: #dc2626;
+        }
+
+        /* Tooltip Styles */
+        .tooltip {
+            position: absolute;
+            background-color: rgba(17, 24, 39, 0.95);
+            color: white;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--border-radius-sm);
+            font-size: var(--font-size-sm);
+            max-width: 300px;
+            z-index: 1000;
+            pointer-events: none;
+            box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(8px);
+            opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+
+        .tooltip.show {
+            opacity: 1;
+        }
+
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: rgba(17, 24, 39, 0.95) transparent transparent transparent;
+        }
+
+        .tooltip::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: transparent transparent rgba(17, 24, 39, 0.95) transparent;
+            display: none;
+        }
+
+        .tooltip.tooltip-below::before {
+            display: block;
+        }
+
+        .tooltip.tooltip-below::after {
+            display: none;
+        }
+
+        /* Word Cloud Text Styles */
+        .word-cloud-text {
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .word-cloud-text:hover {
+            opacity: 0.8;
+        }
+
+        .word-cloud-text.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .main-content {
+                flex-direction: column;
+                padding: var(--spacing-md);
+            }
+
+            .side-panel {
+                width: 100%;
+                position: static;
+                order: 2;
+            }
+
+            .word-cloud-area {
+                order: 1;
+                min-height: 400px;
+            }
+
+            .page-title {
+                font-size: var(--font-size-2xl);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: var(--spacing-md);
+            }
+
+            .main-content {
+                padding: var(--spacing-sm);
+                gap: var(--spacing-md);
+            }
+
+            .side-panel {
+                padding: var(--spacing-md);
+            }
+
+            .word-cloud-area {
+                padding: var(--spacing-md);
+                min-height: 350px;
+            }
+
+            .page-title {
+                font-size: var(--font-size-xl);
+            }
+
+            .legend-items {
+                gap: var(--spacing-xs);
+            }
+
+            .legend-item {
+                padding: var(--spacing-xs) var(--spacing-sm);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: var(--spacing-sm);
+            }
+
+            .main-content {
+                padding: var(--spacing-xs);
+            }
+
+            .side-panel {
+                padding: var(--spacing-sm);
+            }
+
+            .word-cloud-area {
+                padding: var(--spacing-sm);
+                min-height: 300px;
+            }
+
+            .page-title {
+                font-size: var(--font-size-lg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="page-title">Technical Jargon: Word Cloud</h1>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Side Panel -->
+            <aside class="side-panel">
+                <!-- File Input Section -->
+                <div class="panel-section">
+                    <h2 class="section-title">File Upload</h2>
+                    <div class="file-input-container">
+                        <input type="file" id="excelFile" accept=".xlsx,.xls,.csv" class="file-input">
+                        <p style="margin-top: var(--spacing-sm); color: var(--text-secondary); font-size: var(--font-size-sm);">
+                            Choose an Excel file (.xlsx, .xls) or CSV file (.csv). Each sheet will be treated as a category. First column should contain words, second column should contain definitions.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Search Section -->
+                <div class="panel-section">
+                    <h2 class="section-title">Search</h2>
+                    <input type="text" id="searchField" class="search-field" placeholder="Search words..." aria-label="Search for words in the cloud">
+                </div>
+
+                <!-- Export Section -->
+                <div class="panel-section" id="exportSection" style="display: none;">
+                    <h2 class="section-title">Export</h2>
+                    <button id="exportBtn" class="export-btn" aria-label="Download word cloud as image">
+                        📥 Download Image
+                    </button>
+                </div>
+
+                <!-- Categories Legend -->
+                <div class="panel-section" id="legendContainer" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
+                        <h2 class="section-title" style="margin: 0;">Categories</h2>
+                        <div class="category-controls">
+                            <button id="selectAllBtn" class="control-btn" aria-label="Select all categories">All</button>
+                            <button id="selectNoneBtn" class="control-btn" aria-label="Deselect all categories">None</button>
+                        </div>
+                    </div>
+                    <div class="legend-items" id="legendItems"></div>
+                </div>
+
+                <!-- Help Section -->
+                <div class="panel-section">
+                    <h2 class="section-title">Help</h2>
+                    <div class="help-content">
+                        <div class="help-item">
+                            <strong>📁 File Upload:</strong> Choose an Excel file (.xlsx, .xls) or CSV file (.csv). Each sheet becomes a category.
+                        </div>
+                        <div class="help-item">
+                            <strong>📊 Categories:</strong> First column = words, second column = definitions.
+                        </div>
+                        <div class="help-item">
+                            <strong>🔍 Search:</strong> Type to filter words by name or definition.
+                        </div>
+                        <div class="help-item">
+                            <strong>🎨 Colors:</strong> Each category gets a unique color.
+                        </div>
+                        <div class="help-item">
+                            <strong>📥 Export:</strong> Download your cloud as a PNG image.
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Word Cloud Area -->
+            <section class="word-cloud-area">
+                <div class="word-cloud-container" id="wordCloudContainer">
+                    <div class="loading" id="loadingMessage">
+                        Select an Excel file to generate your word cloud
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Global variables
+        let wordData = [];
+        let categories = {};
+        let categoryColors = {};
+        let tooltip = null;
+        let searchTimeout = null;
+        let currentSearchTerm = '';
+        let visibleWords = new Set(); // Track which words should be visible
+        let currentSvg = null; // Reference to current SVG for export
+        let appState = {
+            searchTerm: '',
+            categoryStates: {},
+            lastFile: null
+        };
+        
+        // Predefined color palette for categories
+        const colorPalette = [
+            "#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", 
+            "#DDA0DD", "#98D8C8", "#F7DC6F", "#BB8FCE", "#85C1E9",
+            "#FF9F43", "#10AC84", "#5F27CD", "#00D2D3", "#FF6348",
+            "#2ED573", "#FF4757", "#3742FA", "#2F3542", "#A4B0BE"
+        ];
+        
+        // Initialize tooltip with improved positioning
+        function initTooltip() {
+            tooltip = d3.select("body").append("div")
+                .attr("class", "tooltip");
+        }
+
+        // Smart tooltip positioning to keep it on screen
+        function positionTooltip(event, tooltipElement) {
+            const tooltipRect = tooltipElement.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            let left = event.pageX + 10;
+            let top = event.pageY - 28;
+            
+            // Adjust horizontal position if tooltip would go off screen
+            if (left + tooltipRect.width > viewportWidth - 10) {
+                left = event.pageX - tooltipRect.width - 10;
+            }
+            
+            // Adjust vertical position if tooltip would go off screen
+            if (top < 10) {
+                top = event.pageY + 20;
+                // Change arrow direction
+                tooltipElement.classList.add('tooltip-below');
+            } else {
+                tooltipElement.classList.remove('tooltip-below');
+            }
+            
+            return { left, top };
+        }
+        
+        // Read Excel or CSV file and extract word/definition pairs from all sheets
+        function readExcelFile(file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    // Check if it's a CSV file
+                    if (file.name.toLowerCase().endsWith('.csv')) {
+                        readCSVFile(e.target.result);
+                        return;
+                    }
+                    
+                    // Handle Excel files
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    // Reset data structures
+                    wordData = [];
+                    categories = {};
+                    categoryColors = {};
+                    
+                    // Process each sheet
+                    workbook.SheetNames.forEach((sheetName, index) => {
+                        const worksheet = workbook.Sheets[sheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                        
+                        // Assign color to this category
+                        categoryColors[sheetName] = colorPalette[index % colorPalette.length];
+                        
+                        // Extract word/definition pairs from first two columns
+                        const sheetWords = [];
+                        for (let i = 0; i < jsonData.length; i++) {
+                            const row = jsonData[i];
+                            if (row && row[0] && row[1]) {
+                                const word = String(row[0]).trim();
+                                const definition = String(row[1]).trim();
+                                
+                                if (word && definition) {
+                                    const wordObj = {
+                                        word: word,
+                                        definition: definition,
+                                        category: sheetName,
+                                        color: categoryColors[sheetName]
+                                    };
+                                    wordData.push(wordObj);
+                                    sheetWords.push(wordObj);
+                                }
+                            }
+                        }
+                        
+                        categories[sheetName] = sheetWords;
+                        console.log(`Sheet "${sheetName}": ${sheetWords.length} words`);
+                    });
+                    
+                    if (wordData.length === 0) {
+                        showError("No valid word/definition pairs found in any sheet.");
+                        return;
+                    }
+                    
+                    console.log(`Total words loaded: ${wordData.length} from ${workbook.SheetNames.length} sheets`);
+                    initializeVisibleWords();
+                    createLegend();
+                    generateWordCloud();
+                    setupEventListeners();
+                    
+                } catch (error) {
+                    console.error("Error reading file:", error);
+                    showError("Error reading file. Please make sure it's a valid Excel or CSV file.");
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Read CSV file and extract word/definition pairs
+        function readCSVFile(csvContent) {
+            try {
+                // Reset data structures
+                wordData = [];
+                categories = {};
+                categoryColors = {};
+                
+                // Parse CSV content
+                const lines = csvContent.split('\n');
+                const sheetName = 'Data'; // Default sheet name for CSV
+                
+                // Assign color to this category
+                categoryColors[sheetName] = colorPalette[0];
+                
+                // Extract word/definition pairs from first two columns
+                const sheetWords = [];
+                
+                for (let i = 1; i < lines.length; i++) { // Skip header row
+                    const line = lines[i].trim();
+                    if (line) {
+                        // Handle CSV parsing with proper quote handling
+                        const columns = parseCSVLine(line);
+                        if (columns.length >= 2) {
+                            const word = columns[0].trim();
+                            const definition = columns[1].trim();
+                            
+                            if (word && definition) {
+                                const wordObj = {
+                                    word: word,
+                                    definition: definition,
+                                    category: sheetName,
+                                    color: categoryColors[sheetName]
+                                };
+                                wordData.push(wordObj);
+                                sheetWords.push(wordObj);
+                            }
+                        }
+                    }
+                }
+                
+                categories[sheetName] = sheetWords;
+                console.log(`CSV "${sheetName}": ${sheetWords.length} words`);
+                
+                if (wordData.length === 0) {
+                    showError("No valid word/definition pairs found in CSV file.");
+                    return;
+                }
+                
+                console.log(`Total words loaded: ${wordData.length} from CSV file`);
+                initializeVisibleWords();
+                createLegend();
+                generateWordCloud();
+                setupEventListeners();
+                
+            } catch (error) {
+                console.error("Error reading CSV file:", error);
+                showError("Error reading CSV file. Please make sure it's properly formatted.");
+            }
+        }
+
+        // Parse CSV line handling quoted fields
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current);
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            
+            result.push(current);
+            return result;
+        }
+
+        // Initialize visible words set
+        function initializeVisibleWords() {
+            visibleWords.clear();
+            wordData.forEach(word => visibleWords.add(word.word));
+        }
+
+        // Setup event listeners for search and controls
+        function setupEventListeners() {
+            // Search functionality with debounce
+            const searchField = document.getElementById('searchField');
+            searchField.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    performSearch(this.value);
+                    saveState();
+                }, 300);
+            });
+
+            // Select All button
+            document.getElementById('selectAllBtn').addEventListener('click', function() {
+                selectAllCategories();
+                saveState();
+            });
+
+            // Select None button
+            document.getElementById('selectNoneBtn').addEventListener('click', function() {
+                selectNoneCategories();
+                saveState();
+            });
+
+            // Export button
+            document.getElementById('exportBtn').addEventListener('click', function() {
+                exportWordCloud();
+            });
+
+            // Window resize handler to maintain state
+            window.addEventListener('resize', function() {
+                if (currentSvg) {
+                    regenerateWordCloud();
+                }
+            });
+        }
+
+        // Perform search across visible categories
+        function performSearch(searchTerm) {
+            currentSearchTerm = searchTerm.toLowerCase().trim();
+            
+            if (currentSearchTerm === '') {
+                // Show all words from visible categories
+                updateWordVisibility();
+            } else {
+                // Filter words based on search term
+                const filteredWords = wordData.filter(word => {
+                    const isCategoryVisible = document.querySelector(`[data-category="${word.category}"] .legend-checkbox`).checked;
+                    const matchesSearch = word.word.toLowerCase().includes(currentSearchTerm) || 
+                                        word.definition.toLowerCase().includes(currentSearchTerm);
+                    return isCategoryVisible && matchesSearch;
+                });
+                
+                visibleWords.clear();
+                filteredWords.forEach(word => visibleWords.add(word.word));
+                updateWordVisibility();
+            }
+        }
+
+        // Update word visibility based on current filters
+        function updateWordVisibility() {
+            d3.selectAll('.word-cloud-text')
+                .classed('hidden', function(d) {
+                    return !visibleWords.has(d.text);
+                });
+        }
+
+        // Save current application state
+        function saveState() {
+            appState.searchTerm = currentSearchTerm;
+            appState.categoryStates = {};
+            
+            document.querySelectorAll('.legend-checkbox').forEach(checkbox => {
+                appState.categoryStates[checkbox.dataset.category] = checkbox.checked;
+            });
+            
+            // Save to sessionStorage for persistence during the session
+            sessionStorage.setItem('wordCloudState', JSON.stringify(appState));
+        }
+
+        // Load saved application state
+        function loadState() {
+            const savedState = sessionStorage.getItem('wordCloudState');
+            if (savedState) {
+                appState = JSON.parse(savedState);
+                currentSearchTerm = appState.searchTerm || '';
+                
+                // Restore search field
+                document.getElementById('searchField').value = currentSearchTerm;
+            }
+        }
+
+        // Apply saved state to categories
+        function applySavedCategoryStates() {
+            if (Object.keys(appState.categoryStates).length > 0) {
+                Object.keys(appState.categoryStates).forEach(categoryName => {
+                    const checkbox = document.querySelector(`[data-category="${categoryName}"] .legend-checkbox`);
+                    if (checkbox) {
+                        checkbox.checked = appState.categoryStates[categoryName];
+                        toggleCategory(categoryName, appState.categoryStates[categoryName]);
+                    }
+                });
+            }
+        }
+
+        // Export word cloud as image
+        function exportWordCloud() {
+            if (!currentSvg) {
+                alert('No word cloud to export. Please load a file first.');
+                return;
+            }
+
+            try {
+                // Get SVG data
+                const svgData = new XMLSerializer().serializeToString(currentSvg.node());
+                const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+                const svgUrl = URL.createObjectURL(svgBlob);
+
+                // Create canvas to convert SVG to PNG
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+
+                img.onload = function() {
+                    // Set canvas size to match SVG
+                    canvas.width = currentSvg.attr('width');
+                    canvas.height = currentSvg.attr('height');
+                    
+                    // Fill with white background
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Draw the SVG image
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Convert to PNG and download
+                    canvas.toBlob(function(blob) {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'word-cloud.png';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }, 'image/png');
+                    
+                    URL.revokeObjectURL(svgUrl);
+                };
+
+                img.src = svgUrl;
+            } catch (error) {
+                console.error('Export failed:', error);
+                alert('Failed to export image. Please try again.');
+            }
+        }
+
+        // Regenerate word cloud on window resize
+        function regenerateWordCloud() {
+            if (wordData.length > 0) {
+                generateWordCloud();
+            }
+        }
+
+        // Select all categories
+        function selectAllCategories() {
+            document.querySelectorAll('.legend-checkbox').forEach(checkbox => {
+                checkbox.checked = true;
+                const categoryName = checkbox.dataset.category;
+                toggleCategory(categoryName, true);
+            });
+            updateWordVisibility();
+        }
+
+        // Select none categories
+        function selectNoneCategories() {
+            document.querySelectorAll('.legend-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+                const categoryName = checkbox.dataset.category;
+                toggleCategory(categoryName, false);
+            });
+            updateWordVisibility();
+        }
+        
+        // Create category legend with checkboxes
+        function createLegend() {
+            const legendContainer = document.getElementById('legendContainer');
+            const legendItems = document.getElementById('legendItems');
+            
+            // Clear existing legend items
+            legendItems.innerHTML = '';
+            
+            // Create legend item for each category
+            Object.keys(categories).forEach(categoryName => {
+                const legendItem = document.createElement('div');
+                legendItem.className = 'legend-item';
+                legendItem.dataset.category = categoryName;
+                
+                const dot = document.createElement('div');
+                dot.className = 'legend-dot';
+                dot.style.backgroundColor = categoryColors[categoryName];
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'legend-checkbox';
+                checkbox.checked = true; // All categories enabled by default
+                checkbox.dataset.category = categoryName;
+                
+                const label = document.createElement('span');
+                label.className = 'legend-label';
+                label.textContent = `${categoryName} (${categories[categoryName].length})`;
+                
+                legendItem.appendChild(dot);
+                legendItem.appendChild(checkbox);
+                legendItem.appendChild(label);
+                
+                // Add click handler for the entire legend item
+                legendItem.addEventListener('click', function(e) {
+                    if (e.target.type !== 'checkbox') {
+                        checkbox.checked = !checkbox.checked;
+                    }
+                    toggleCategory(categoryName, checkbox.checked);
+                    updateWordVisibility();
+                    saveState();
+                });
+                
+                legendItems.appendChild(legendItem);
+            });
+            
+            // Show legend container and export section
+            legendContainer.style.display = 'block';
+            document.getElementById('exportSection').style.display = 'block';
+            
+            // Apply any saved category states
+            setTimeout(() => {
+                applySavedCategoryStates();
+                if (currentSearchTerm) {
+                    performSearch(currentSearchTerm);
+                }
+            }, 100);
+        }
+        
+        // Toggle category visibility
+        function toggleCategory(categoryName, isVisible) {
+            const legendItem = document.querySelector(`[data-category="${categoryName}"]`);
+            
+            if (isVisible) {
+                legendItem.classList.remove('disabled');
+            } else {
+                legendItem.classList.add('disabled');
+            }
+            
+            // Update visible words based on current search and category state
+            if (currentSearchTerm === '') {
+                // No search active, show/hide all words from this category
+                if (isVisible) {
+                    categories[categoryName].forEach(word => visibleWords.add(word.word));
+                } else {
+                    categories[categoryName].forEach(word => visibleWords.delete(word.word));
+                }
+            } else {
+                // Search is active, re-run search to update visible words
+                performSearch(currentSearchTerm);
+            }
+        }
+        
+        // Generate word cloud using D3
+        function generateWordCloud() {
+            const container = d3.select("#wordCloudContainer");
+            container.selectAll("*").remove(); // Clear previous content
+            
+            // Get container dimensions for responsive sizing
+            const containerRect = container.node().getBoundingClientRect();
+            const width = Math.max(400, containerRect.width - 40); // Responsive width with padding
+            const height = Math.max(300, containerRect.height - 40); // Responsive height with padding
+            
+            // Create SVG and store reference for export
+            currentSvg = container.append("svg")
+                .attr("width", width)
+                .attr("height", height);
+            
+            // Create word cloud layout
+            const layout = d3.layout.cloud()
+                .size([width - 40, height - 40]) // Use responsive dimensions
+                .words(wordData.map(d => ({
+                    text: d.word,
+                    size: Math.max(12, Math.min(60, 20 + Math.random() * 40)), // Random size between 12-60px
+                    category: d.category,
+                    color: d.color,
+                    definition: d.definition
+                })))
+                .padding(5)
+                .rotate(() => Math.random() * 60 - 30) // Random rotation between -30 and 30 degrees
+                .font("Inter, Segoe UI, sans-serif")
+                .fontSize(d => d.size)
+                .on("end", draw);
+            
+            layout.start();
+            
+            function draw(words) {
+                currentSvg.append("g")
+                    .attr("transform", `translate(${width/2},${height/2})`)
+                    .selectAll("text")
+                    .data(words)
+                    .enter().append("text")
+                    .style("font-size", d => d.size + "px")
+                    .style("font-family", "Inter, Segoe UI, sans-serif")
+                    .style("fill", d => d.color)
+                    .attr("text-anchor", "middle")
+                    .attr("transform", d => `translate(${d.x},${d.y})rotate(${d.rotate})`)
+                    .text(d => d.text)
+                    .attr("class", "word-cloud-text")
+                    .attr("data-category", d => d.category)
+                    .on("mouseover", function(event, d) {
+                        const position = positionTooltip(event, tooltip.node());
+                        tooltip.html(`<strong>${d.text}</strong><br/><em>${d.category}</em><br/>${d.definition}`)
+                            .style("left", position.left + "px")
+                            .style("top", position.top + "px")
+                            .classed("show", true);
+                    })
+                    .on("mouseout", function() {
+                        tooltip.classed("show", false);
+                    });
+            }
+        }
+        
+        // Show error message
+        function showError(message) {
+            const container = d3.select("#wordCloudContainer");
+            container.selectAll("*").remove();
+            container.append("div")
+                .attr("class", "error")
+                .text(message);
+            
+            // Hide legend on error
+            document.getElementById('legendContainer').style.display = 'none';
+        }
+        
+        // Event listener for file input
+        document.getElementById('excelFile').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Show loading message
+                const container = d3.select("#wordCloudContainer");
+                container.selectAll("*").remove();
+                container.append("div")
+                    .attr("class", "loading")
+                    .text("Loading...");
+                
+                // Hide legend and export during loading
+                document.getElementById('legendContainer').style.display = 'none';
+                document.getElementById('exportSection').style.display = 'none';
+                
+                // Clear current state for new file
+                currentSvg = null;
+                wordData = [];
+                categories = {};
+                categoryColors = {};
+                visibleWords.clear();
+                
+                // Reset search field but don't clear saved state yet
+                document.getElementById('searchField').value = '';
+                currentSearchTerm = '';
+                
+                // Read the file
+                readExcelFile(file);
+            }
+        });
+        
+        // Initialize tooltip when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initTooltip();
+            loadState();
+        });
+    </script>
+</body>
+</html>
