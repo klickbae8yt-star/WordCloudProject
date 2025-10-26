@@ -12,35 +12,47 @@
     <script src="https://cdn.jsdelivr.net/npm/d3-cloud@1.2.5/build/d3.layout.cloud.min.js"></script>
     
     <style>
-        /* Design System Variables - Easy to modify */
+        /* Design System Variables - Beautiful Modern Theme */
         :root {
-            --primary-color: #2563eb;
-            --primary-hover: #1d4ed8;
-            --text-primary: #1f2937;
-            --text-secondary: #6b7280;
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --primary-light: #a5b4fc;
+            --secondary-color: #8b5cf6;
+            --accent-color: #06b6d4;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
             --background-primary: #ffffff;
-            --background-secondary: #f9fafb;
-            --background-tertiary: #f3f4f6;
-            --border-color: #e5e7eb;
-            --border-hover: #d1d5db;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --background-secondary: #f8fafc;
+            --background-tertiary: #f1f5f9;
+            --background-glass: rgba(255, 255, 255, 0.8);
+            --border-color: #e2e8f0;
+            --border-hover: #cbd5e1;
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
             --spacing-xs: 4px;
             --spacing-sm: 8px;
             --spacing-md: 16px;
             --spacing-lg: 24px;
             --spacing-xl: 32px;
             --spacing-2xl: 48px;
-            --border-radius-sm: 6px;
-            --border-radius-md: 8px;
-            --border-radius-lg: 12px;
+            --border-radius-sm: 8px;
+            --border-radius-md: 12px;
+            --border-radius-lg: 16px;
+            --border-radius-xl: 20px;
             --font-size-sm: 14px;
             --font-size-base: 16px;
             --font-size-lg: 18px;
             --font-size-xl: 20px;
             --font-size-2xl: 24px;
             --font-size-3xl: 32px;
+            --font-size-4xl: 40px;
         }
 
         /* Base Styles */
@@ -49,13 +61,30 @@
         }
 
         body {
-            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: var(--background-secondary);
+            background: var(--gradient-primary);
+            background-attachment: fixed;
             color: var(--text-primary);
             line-height: 1.6;
             font-size: var(--font-size-base);
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
         }
 
         /* Main Layout Container */
@@ -67,18 +96,38 @@
 
         /* Header */
         .header {
-            background: var(--background-primary);
-            border-bottom: 1px solid var(--border-color);
-            padding: var(--spacing-lg) var(--spacing-xl);
-            box-shadow: var(--shadow-sm);
+            background: var(--background-glass);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: var(--spacing-xl) var(--spacing-2xl);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--gradient-accent);
+            opacity: 0.1;
+            z-index: -1;
         }
 
         .page-title {
             margin: 0;
-            font-size: var(--font-size-3xl);
-            font-weight: 700;
-            color: var(--text-primary);
+            font-size: var(--font-size-4xl);
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             text-align: center;
+            letter-spacing: -0.02em;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         /* Main Content Area */
@@ -95,14 +144,21 @@
         /* Side Panel */
         .side-panel {
             width: 320px;
-            background: var(--background-primary);
-            border-radius: var(--border-radius-lg);
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-md);
-            padding: var(--spacing-lg);
+            background: var(--background-glass);
+            backdrop-filter: blur(20px);
+            border-radius: var(--border-radius-xl);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: var(--shadow-xl);
+            padding: var(--spacing-xl);
             height: fit-content;
             position: sticky;
             top: var(--spacing-lg);
+            transition: all 0.3s ease;
+        }
+
+        .side-panel:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-xl), var(--shadow-glow);
         }
 
         .panel-section {
@@ -115,11 +171,23 @@
 
         .section-title {
             font-size: var(--font-size-lg);
-            font-weight: 600;
+            font-weight: 700;
             color: var(--text-primary);
             margin: 0 0 var(--spacing-md) 0;
             padding-bottom: var(--spacing-sm);
-            border-bottom: 2px solid var(--border-color);
+            border-bottom: 2px solid var(--primary-color);
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 30px;
+            height: 2px;
+            background: var(--gradient-accent);
+            border-radius: 1px;
         }
 
         /* File Input Styling */
@@ -129,47 +197,72 @@
 
         .file-input {
             width: 100%;
-            padding: var(--spacing-md);
+            padding: var(--spacing-lg);
             font-size: var(--font-size-base);
             border: 2px dashed var(--primary-color);
-            border-radius: var(--border-radius-md);
-            background-color: var(--background-tertiary);
+            border-radius: var(--border-radius-lg);
+            background: var(--background-glass);
+            backdrop-filter: blur(10px);
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             color: var(--text-primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-input::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--gradient-primary);
+            opacity: 0.1;
+            transition: left 0.5s ease;
         }
 
         .file-input:hover {
-            background-color: var(--background-secondary);
+            background: var(--background-primary);
             border-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .file-input:hover::before {
+            left: 0;
         }
 
         .file-input:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
         }
 
         /* Search Field */
         .search-field {
             width: 100%;
-            padding: var(--spacing-md);
+            padding: var(--spacing-lg);
             font-size: var(--font-size-base);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-md);
-            background-color: var(--background-primary);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            background: var(--background-glass);
+            backdrop-filter: blur(10px);
             color: var(--text-primary);
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
+            position: relative;
         }
 
         .search-field:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+            transform: translateY(-1px);
         }
 
         .search-field::placeholder {
-            color: var(--text-secondary);
+            color: var(--text-muted);
+            font-weight: 400;
         }
 
         /* Category Control Buttons */
@@ -204,24 +297,42 @@
         /* Export Button */
         .export-btn {
             width: 100%;
-            padding: var(--spacing-md);
+            padding: var(--spacing-lg);
             font-size: var(--font-size-base);
-            font-weight: 500;
-            border: 1px solid var(--primary-color);
-            border-radius: var(--border-radius-md);
-            background-color: var(--primary-color);
+            font-weight: 600;
+            border: none;
+            border-radius: var(--border-radius-lg);
+            background: var(--gradient-primary);
             color: white;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .export-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
         }
 
         .export-btn:hover {
-            background-color: var(--primary-hover);
-            border-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .export-btn:hover::before {
+            left: 100%;
         }
 
         .export-btn:active {
-            transform: translateY(1px);
+            transform: translateY(0);
         }
 
         /* Help Section */
@@ -298,13 +409,19 @@
         /* Word Cloud Container */
         .word-cloud-area {
             flex: 1;
-            background: var(--background-primary);
-            border-radius: var(--border-radius-lg);
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-md);
-            padding: var(--spacing-lg);
+            background: #ffffff;
+            border-radius: var(--border-radius-xl);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow-xl);
+            padding: var(--spacing-xl);
             min-height: 600px;
             position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .word-cloud-area:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-xl), var(--shadow-glow);
         }
 
         .word-cloud-container {
@@ -320,10 +437,39 @@
             font-size: var(--font-size-lg);
             margin-top: 200px;
             color: var(--text-secondary);
+            position: relative;
+        }
+
+        .loading::before {
+            content: '';
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--primary-light);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: translateX(-50%) rotate(0deg); }
+            100% { transform: translateX(-50%) rotate(360deg); }
         }
 
         .error {
             color: #dc2626;
+        }
+
+        .error::before {
+            content: '⚠️';
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 32px;
         }
 
         /* Tooltip Styles */
@@ -381,16 +527,19 @@
         /* Word Cloud Text Styles */
         .word-cloud-text {
             cursor: pointer;
-            transition: opacity 0.2s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: center;
+            z-index: 1;
         }
 
         .word-cloud-text:hover {
-            opacity: 0.8;
+            opacity: 0.95;
         }
 
         .word-cloud-text.hidden {
             opacity: 0;
             pointer-events: none;
+            transform: scale(0.7);
         }
 
         /* Responsive Design */
@@ -489,7 +638,7 @@
                     <div class="file-input-container">
                         <input type="file" id="excelFile" accept=".xlsx,.xls,.csv" class="file-input">
                         <p style="margin-top: var(--spacing-sm); color: var(--text-secondary); font-size: var(--font-size-sm);">
-                            Choose an Excel file (.xlsx, .xls) or CSV file (.csv). Each sheet will be treated as a category. First column should contain words, second column should contain definitions.
+                            Choose an Excel file (.xlsx, .xls) or CSV file (.csv). Each sheet becomes a category, or add a third column for categories in CSV files.
                         </p>
                     </div>
                 </div>
@@ -528,7 +677,7 @@
                             <strong>📁 File Upload:</strong> Choose an Excel file (.xlsx, .xls) or CSV file (.csv). Each sheet becomes a category.
                         </div>
                         <div class="help-item">
-                            <strong>📊 Categories:</strong> First column = words, second column = definitions.
+                            <strong>📊 Categories:</strong> First column = words, second column = definitions, third column = category (optional).
                         </div>
                         <div class="help-item">
                             <strong>🔍 Search:</strong> Type to filter words by name or definition.
@@ -570,12 +719,16 @@
             lastFile: null
         };
         
-        // Predefined color palette for categories
+        // Professional color palette inspired by the example
         const colorPalette = [
-            "#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", 
-            "#DDA0DD", "#98D8C8", "#F7DC6F", "#BB8FCE", "#85C1E9",
-            "#FF9F43", "#10AC84", "#5F27CD", "#00D2D3", "#FF6348",
-            "#2ED573", "#FF4757", "#3742FA", "#2F3542", "#A4B0BE"
+            "#dc2626", "#991b1b", "#7f1d1d", // Red variations
+            "#1f2937", "#374151", "#4b5563", // Dark grays
+            "#f59e0b", "#d97706", "#b45309", // Orange/gold variations
+            "#6b7280", "#9ca3af", "#d1d5db", // Gray variations
+            "#ef4444", "#f87171", "#fca5a5", // Light red variations
+            "#000000", "#1a1a1a", "#333333", // Black variations
+            "#059669", "#10b981", "#34d399", // Green variations
+            "#7c3aed", "#8b5cf6", "#a78bfa"  // Purple variations
         ];
         
         // Initialize tooltip with improved positioning
@@ -710,23 +863,37 @@
                         if (columns.length >= 2) {
                             const word = columns[0].trim();
                             const definition = columns[1].trim();
+                            const category = columns.length >= 3 ? columns[2].trim() : sheetName;
                             
                             if (word && definition) {
+                                // Assign color to category if not already assigned
+                                if (!categoryColors[category]) {
+                                    const colorIndex = Object.keys(categoryColors).length;
+                                    categoryColors[category] = colorPalette[colorIndex % colorPalette.length];
+                                }
+                                
                                 const wordObj = {
                                     word: word,
                                     definition: definition,
-                                    category: sheetName,
-                                    color: categoryColors[sheetName]
+                                    category: category,
+                                    color: categoryColors[category]
                                 };
                                 wordData.push(wordObj);
-                                sheetWords.push(wordObj);
+                                
+                                // Add to category-specific array
+                                if (!categories[category]) {
+                                    categories[category] = [];
+                                }
+                                categories[category].push(wordObj);
                             }
                         }
                     }
                 }
                 
-                categories[sheetName] = sheetWords;
-                console.log(`CSV "${sheetName}": ${sheetWords.length} words`);
+                // Log each category
+                Object.keys(categories).forEach(cat => {
+                    console.log(`Category "${cat}": ${categories[cat].length} words`);
+                });
                 
                 if (wordData.length === 0) {
                     showError("No valid word/definition pairs found in CSV file.");
@@ -1055,20 +1222,31 @@
                 .attr("width", width)
                 .attr("height", height);
             
-            // Create word cloud layout
+            // Create word cloud layout with enhanced algorithm
             const layout = d3.layout.cloud()
                 .size([width - 40, height - 40]) // Use responsive dimensions
-                .words(wordData.map(d => ({
-                    text: d.word,
-                    size: Math.max(12, Math.min(60, 20 + Math.random() * 40)), // Random size between 12-60px
-                    category: d.category,
-                    color: d.color,
-                    definition: d.definition
-                })))
-                .padding(5)
-                .rotate(() => Math.random() * 60 - 30) // Random rotation between -30 and 30 degrees
-                .font("Inter, Segoe UI, sans-serif")
+                .words(wordData.map((d, i) => {
+                    // Create better size distribution based on word length and position
+                    const baseSize = Math.max(14, Math.min(80, 16 + (d.word.length * 2) + Math.random() * 30));
+                    const sizeMultiplier = i < 5 ? 1.5 : i < 10 ? 1.2 : 1.0; // First 5 words larger
+                    return {
+                        text: d.word,
+                        size: baseSize * sizeMultiplier,
+                        category: d.category,
+                        color: d.color,
+                        definition: d.definition,
+                        weight: d.word.length // For better positioning
+                    };
+                }))
+                .padding(2) // Tighter packing
+                .rotate(() => {
+                    // More varied rotation for organic feel
+                    const rotations = [-45, -30, -15, 0, 15, 30, 45, 90];
+                    return rotations[Math.floor(Math.random() * rotations.length)];
+                })
+                .font("Inter, SF Pro Display, -apple-system, BlinkMacSystemFont, sans-serif")
                 .fontSize(d => d.size)
+                .spiral("archimedean") // Better spiral for tighter packing
                 .on("end", draw);
             
             layout.start();
@@ -1080,11 +1258,21 @@
                     .data(words)
                     .enter().append("text")
                     .style("font-size", d => d.size + "px")
-                    .style("font-family", "Inter, Segoe UI, sans-serif")
+                    .style("font-family", "Inter, SF Pro Display, -apple-system, BlinkMacSystemFont, sans-serif")
+                    .style("font-weight", d => d.size > 50 ? "800" : d.size > 30 ? "700" : "600")
                     .style("fill", d => d.color)
+                    .style("text-shadow", d => {
+                        // Enhanced shadows for better depth
+                        const shadowIntensity = d.size > 50 ? "0 4px 8px rgba(0, 0, 0, 0.2)" : 
+                                               d.size > 30 ? "0 3px 6px rgba(0, 0, 0, 0.15)" : 
+                                               "0 2px 4px rgba(0, 0, 0, 0.1)";
+                        return shadowIntensity;
+                    })
+                    .style("stroke", "rgba(255, 255, 255, 0.1)")
+                    .style("stroke-width", d => d.size > 50 ? "1px" : "0.5px")
                     .attr("text-anchor", "middle")
                     .attr("transform", d => `translate(${d.x},${d.y})rotate(${d.rotate})`)
-                    .text(d => d.text)
+                    .text(d => d.text.toUpperCase()) // Make text uppercase like the example
                     .attr("class", "word-cloud-text")
                     .attr("data-category", d => d.category)
                     .on("mouseover", function(event, d) {
@@ -1093,9 +1281,21 @@
                             .style("left", position.left + "px")
                             .style("top", position.top + "px")
                             .classed("show", true);
+                        
+                        // Add dramatic glow effect to hovered word
+                        d3.select(this)
+                            .style("filter", "drop-shadow(0 0 12px " + d.color + ") drop-shadow(0 0 24px " + d.color + ")")
+                            .style("transform", "scale(1.1)")
+                            .style("z-index", "10");
                     })
                     .on("mouseout", function() {
                         tooltip.classed("show", false);
+                        
+                        // Remove glow effect
+                        d3.select(this)
+                            .style("filter", "none")
+                            .style("transform", "scale(1)")
+                            .style("z-index", "1");
                     });
             }
         }
